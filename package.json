@@ -13,6 +13,7 @@
     "typecheck": "nitropack prepare && tsc"
   },
   "dependencies": {
+    "@grammyjs/parse-mode": "^2.3.0",
     "grammy": "^1.42.0",
     "nitropack": "^2.13.3"
   },
