@@ -8,5 +8,8 @@ export async function start(ctx: Context) {
 
   const mention = mentionUser(user.first_name, user.id)
 
-  await ctx.reply(`Welcome ${mention}!`, { reply_markup: kb.defaultKeyboard })
+  await ctx.reply(`Welcome ${mention}!`, {
+    parse_mode: 'HTML',
+    reply_markup: kb.defaultKeyboard,
+  })
 }
