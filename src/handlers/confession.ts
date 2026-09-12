@@ -113,7 +113,10 @@ export async function replyConfession(
     return
   }
 
-  await ctx.reply(`Replying to: "${selectedConfession}"\n\nSend your reply:`)
+  await ctx.reply(
+    `<b>Replying to:</b>\n\n${selectedConfession}\n\nSend your reply:`,
+    { parse_mode: 'HTML' },
+  )
   const replyCtx = await conversation.waitFor('message:text')
   const replyText = replyCtx.message.text
 
