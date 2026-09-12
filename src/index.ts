@@ -3,6 +3,7 @@ import { Bot, session } from 'grammy'
 import { BOT_TOKEN } from './env'
 import * as commands from './handlers/commands'
 import { submitConfession, type BotContext } from './handlers/confession'
+import './handlers/admin'
 
 export const bot = new Bot<BotContext>(BOT_TOKEN)
 
