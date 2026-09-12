@@ -1,13 +1,20 @@
 import { broadcastToAdmin } from '../services/broadcast'
 import type { Conversation, ConversationFlavor } from '@grammyjs/conversations'
-import type { Context } from 'grammy'
+import type { Context, SessionFlavor } from 'grammy'
 
-export type BotContext = Context & ConversationFlavor<Context>
-export type BotConversation = Conversation<BotContext>
+export type SessionData = Record<string, never>
+
+export type BotContext = Context &
+  SessionFlavor<SessionData> &
+  ConversationFlavor<Context>
+
+type InnerContext = Context & SessionFlavor<SessionData>
+
+export type BotConversation = Conversation<BotContext, InnerContext>
 
 export async function submitConfession(
   conversation: BotConversation,
-  ctx: BotContext,
+  ctx: InnerContext,
 ) {
   await ctx.reply('Please send your confession text')
   const confessionCtx = await conversation.waitFor('message:text')
