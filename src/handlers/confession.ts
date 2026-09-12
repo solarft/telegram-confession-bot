@@ -1,7 +1,8 @@
+import { InlineKeyboard, type Context, type SessionFlavor } from 'grammy'
+import { redis } from '..'
 import { broadcastToAdmin } from '../services/broadcast'
 import { defaultKeyboard } from './keyboard'
 import type { Conversation, ConversationFlavor } from '@grammyjs/conversations'
-import type { Context, SessionFlavor } from 'grammy'
 
 export type SessionData = Record<string, never>
 
@@ -31,4 +32,21 @@ export async function submitConfession(
       reply_markup: defaultKeyboard,
     })
   }
+}
+
+export async function replyConfession(
+  conversation: BotConversation,
+  ctx: InnerContext,
+) {
+  const replySelectionKeyboard = new InlineKeyboard()
+
+  const confessions: string[] = await redis.lrange('recent_confessions', 0, 49)
+
+  confessions.forEach((confession, i) => {
+    replySelectionKeyboard.text(confession, String(i)).row()
+  })
+
+  await ctx.reply('Please select the confession you want to reply to', {
+    reply_markup: replySelectionKeyboard,
+  })
 }
