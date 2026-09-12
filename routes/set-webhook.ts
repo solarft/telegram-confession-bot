@@ -1,5 +1,5 @@
-import { TOKEN } from '~/src/env'
 import { bot } from '~/src/bot'
+import { TOKEN } from '~/src/env'
 
 export default eventHandler(async (evt) => {
   const host = getRequestHeader(evt, 'x-forwarded-host') || getRequestHost(evt)

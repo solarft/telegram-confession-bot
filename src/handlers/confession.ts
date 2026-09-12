@@ -14,6 +14,36 @@ type InnerContext = Context & SessionFlavor<SessionData>
 
 export type BotConversation = Conversation<BotContext, InnerContext>
 
+const PAGE_SIZE = 10
+
+async function buildConfessionKeyboard(offset: number) {
+  const confessions: string[] = await redis.lrange(
+    'recent_confessions',
+    offset,
+    offset + PAGE_SIZE - 1,
+  )
+
+  if (confessions.length === 0 && offset === 0) {
+    return { keyboard: null, confessions: [] }
+  }
+
+  const keyboard = new InlineKeyboard()
+
+  confessions.forEach((confession, i) => {
+    const lastReply = confession.includes('💬')
+      ? confession.slice(confession.lastIndexOf('💬')).trim()
+      : confession
+    const label =
+      lastReply.length > 32 ? `${lastReply.slice(0, 32)}...` : lastReply
+    keyboard.text(label, String(offset + i)).row()
+  })
+
+  if (offset > 0) keyboard.text('⬅️ Prev', 'prev')
+  if (confessions.length === PAGE_SIZE) keyboard.text('➡️ Next', 'next')
+
+  return { keyboard, confessions }
+}
+
 export async function submitConfession(
   conversation: BotConversation,
   ctx: InnerContext,
@@ -38,28 +68,63 @@ export async function replyConfession(
   conversation: BotConversation,
   ctx: InnerContext,
 ) {
-  const replySelectionKeyboard = new InlineKeyboard()
+  let offset = 0
 
-  const confessions: string[] = await redis.lrange('recent_confessions', 0, 49)
-
-  confessions.forEach((confession, i) => {
-    const lastReply = confession.includes('💬')
-      ? confession.slice(confession.lastIndexOf('💬')).trim()
-      : confession
-    replySelectionKeyboard.text(`${lastReply.slice(0, 32)}...`, String(i)).row()
-  })
+  const { keyboard, confessions } = await buildConfessionKeyboard(offset)
+  if (!keyboard) {
+    await ctx.reply('No confessions available yet.', {
+      reply_markup: defaultKeyboard,
+    })
+    return
+  }
 
   await ctx.reply('Please select the confession you want to reply to', {
-    reply_markup: replySelectionKeyboard,
+    reply_markup: keyboard,
   })
 
-  const callbackCtx = await conversation.waitFor('callback_query')
-  const selectedIndex = Number(callbackCtx.callbackQuery.data)
-  const selectedConfession = confessions[selectedIndex]
+  let selectedConfession: string | undefined
+  let currentConfessions = confessions
+
+  while (!selectedConfession) {
+    const callbackCtx = await conversation.waitFor('callback_query')
+    const data = callbackCtx.callbackQuery.data
+    await callbackCtx.answerCallbackQuery()
+
+    if (data === 'prev') {
+      offset = Math.max(0, offset - PAGE_SIZE)
+    } else if (data === 'next') {
+      offset += PAGE_SIZE
+    } else {
+      selectedConfession = currentConfessions[Number(data) - offset]
+      continue
+    }
+
+    const result = await buildConfessionKeyboard(offset)
+    if (!result.keyboard) break
+
+    currentConfessions = result.confessions
+    await callbackCtx.editMessageReplyMarkup({ reply_markup: result.keyboard })
+  }
+
+  if (!selectedConfession) {
+    await ctx.reply('No confession selected.', {
+      reply_markup: defaultKeyboard,
+    })
+    return
+  }
 
   await ctx.reply(`Replying to: "${selectedConfession}"\n\nSend your reply:`)
   const replyCtx = await conversation.waitFor('message:text')
   const replyText = replyCtx.message.text
 
-  await broadcastToAdmin(`${selectedConfession}\n\n💬 ${replyText}`)
+  try {
+    await broadcastToAdmin(`${selectedConfession}\n\n💬 ${replyText}`)
+    await ctx.reply('Your reply has been sent for approval!', {
+      reply_markup: defaultKeyboard,
+    })
+  } catch {
+    await ctx.reply('amalakkkk. sum ting went rong la. try agen leter ok', {
+      reply_markup: defaultKeyboard,
+    })
+  }
 }
