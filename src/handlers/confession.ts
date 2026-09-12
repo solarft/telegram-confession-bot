@@ -43,7 +43,10 @@ export async function replyConfession(
   const confessions: string[] = await redis.lrange('recent_confessions', 0, 49)
 
   confessions.forEach((confession, i) => {
-    replySelectionKeyboard.text(confession.slice(0, 35), String(i)).row()
+    const lastReply = confession.includes('💬')
+      ? confession.slice(confession.lastIndexOf('💬')).trim()
+      : confession
+    replySelectionKeyboard.text(`${lastReply.slice(0, 32)}...`, String(i)).row()
   })
 
   await ctx.reply('Please select the confession you want to reply to', {
