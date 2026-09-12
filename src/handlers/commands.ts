@@ -1,6 +1,6 @@
 import { mentionUser } from '@grammyjs/parse-mode'
 
-import * as kb from './keyboard'
+import { defaultKeyboard } from './keyboard'
 import type { Context } from 'grammy'
 
 export async function start(ctx: Context) {
@@ -10,6 +10,6 @@ export async function start(ctx: Context) {
 
   await ctx.reply(`Welcome ${mention}!`, {
     parse_mode: 'HTML',
-    reply_markup: kb.defaultKeyboard,
+    reply_markup: defaultKeyboard,
   })
 }

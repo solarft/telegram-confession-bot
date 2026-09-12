@@ -13,7 +13,10 @@
     "typecheck": "nitropack prepare && tsc"
   },
   "dependencies": {
+    "@grammyjs/conversations": "^2.1.1",
     "@grammyjs/parse-mode": "^2.3.0",
+    "@upstash/redis": "^1.38.4",
+    "dotenv": "^17.4.2",
     "grammy": "^1.42.0",
     "nitropack": "^2.13.3"
   },
