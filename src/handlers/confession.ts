@@ -1,4 +1,5 @@
 import { broadcastToAdmin } from '../services/broadcast'
+import { defaultKeyboard } from './keyboard'
 import type { Conversation, ConversationFlavor } from '@grammyjs/conversations'
 import type { Context, SessionFlavor } from 'grammy'
 
@@ -22,8 +23,12 @@ export async function submitConfession(
 
   try {
     await broadcastToAdmin(confessionText)
-    await ctx.reply('Your confession has been sent for approval!')
+    await ctx.reply('Your confession has been sent for approval!', {
+      reply_markup: defaultKeyboard,
+    })
   } catch {
-    await ctx.reply('amalakkkk. sum ting went rong la. try agen leter ok')
+    await ctx.reply('amalakkkk. sum ting went rong la. try agen leter ok', {
+      reply_markup: defaultKeyboard,
+    })
   }
 }

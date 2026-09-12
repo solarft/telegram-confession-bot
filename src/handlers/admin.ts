@@ -9,7 +9,9 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
     const confessionText = fullText.replace(confessionPrefix, '')
 
     await ctx.api.sendMessage(CHANNEL_ID, confessionText)
-    await ctx.editMessageText(`**Approved:**\n\n${confessionText}`)
+    await ctx.editMessageText(`**Approved:**\n\n${confessionText}`, {
+      parse_mode: 'Markdown',
+    })
     await ctx.answerCallbackQuery()
   })
 
@@ -17,7 +19,9 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
     const fullText = ctx.callbackQuery.message?.text || ''
     const confessionText = fullText.replace(confessionPrefix, '')
 
-    await ctx.editMessageText(`**Rejected:**\n\n${confessionText}`)
+    await ctx.editMessageText(`**Rejected:**\n\n${confessionText}`, {
+      parse_mode: 'Markdown',
+    })
     await ctx.answerCallbackQuery()
   })
 }
