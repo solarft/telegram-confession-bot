@@ -12,7 +12,7 @@ bot.use(conversations())
 bot.use(createConversation(submitConfession, 'submitConfession'))
 
 bot.command('start', commands.start)
-bot.hears('📝 New confession', (ctx) =>
+bot.hears('🗣️ New confession', (ctx) =>
   ctx.conversation.enter('submitConfession'),
 )
 registerAdminHandlers(bot)
