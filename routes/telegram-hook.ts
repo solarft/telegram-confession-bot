@@ -1,5 +1,5 @@
 import { webhookCallback } from 'grammy'
-import { bot } from '~/src'
+import { bot } from '~/src/bot'
 import { TOKEN } from '~/src/env'
 
 export default defineEventHandler((event) => {

@@ -1,11 +1,9 @@
 import { conversations, createConversation } from '@grammyjs/conversations'
-import { Bot, session } from 'grammy'
-import { BOT_TOKEN } from './env'
+import { session } from 'grammy'
+import './handlers/admin'
 import * as commands from './handlers/commands'
 import { submitConfession, type BotContext } from './handlers/confession'
-import './handlers/admin'
-
-export const bot = new Bot<BotContext>(BOT_TOKEN)
+import { bot } from './bot'
 
 bot.use(session({ initial: () => ({}) }))
 bot.use(conversations())

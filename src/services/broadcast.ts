@@ -1,6 +1,6 @@
 import { ADMIN_GROUP_ID, CHANNEL_ID } from '../env'
 import { approvalKeyboard } from '../handlers/keyboard'
-import { bot } from '../index'
+import { bot } from '../bot'
 
 export const confessionPrefix = '📝 **wei wei wei ada confession baru**\n\n'
 

@@ -1,5 +1,5 @@
 import { CHANNEL_ID } from '../env'
-import { bot } from '../index'
+import { bot } from '../bot'
 import { confessionPrefix } from '../services/broadcast'
 
 bot.callbackQuery('approve', async (ctx) => {
