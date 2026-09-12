@@ -11,7 +11,7 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
 
     await ctx.api.sendMessage(CHANNEL_ID, confessionText)
 
-    await redis.lpush('recent_confessions', confessionText.slice(0, 40))
+    await redis.lpush('recent_confessions', confessionText)
     await redis.ltrim('recent_confessions', 0, 49)
 
     await ctx.editMessageText(`✅ <b>Approved:</b>\n\n${confessionText}`, {
