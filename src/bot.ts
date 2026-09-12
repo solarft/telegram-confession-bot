@@ -15,4 +15,7 @@ bot.command('start', commands.start)
 bot.hears('🗣️ New confession', (ctx) =>
   ctx.conversation.enter('submitConfession'),
 )
+bot.hears('💬 Reply to a confession', (ctx) =>
+  ctx.conversation.enter('replyConfession'),
+)
 registerAdminHandlers(bot)
