@@ -1,3 +1,4 @@
+import { redis } from '..'
 import { CHANNEL_ID } from '../env'
 import { confessionPrefix } from '../services/broadcast'
 import type { BotContext } from './confession'
@@ -9,6 +10,10 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
     const confessionText = fullText.replace(confessionPrefix, '')
 
     await ctx.api.sendMessage(CHANNEL_ID, confessionText)
+
+    await redis.lpush('recent_confessions', confessionText.slice(0, 40))
+    await redis.ltrim('recent_confessions', 0, 49)
+
     await ctx.editMessageText(`**Approved:**\n\n${confessionText}`, {
       parse_mode: 'Markdown',
     })
