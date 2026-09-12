@@ -11,6 +11,6 @@ export async function broadcastToChannel(text: string) {
 export async function broadcastToAdmin(text: string) {
   await bot.api.sendMessage(ADMIN_GROUP_ID, `${confessionPrefix}${text}`, {
     reply_markup: approvalKeyboard,
-    parse_mode: 'Markdown',
+    parse_mode: 'HTML',
   })
 }

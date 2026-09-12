@@ -14,8 +14,8 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
     await redis.lpush('recent_confessions', confessionText.slice(0, 40))
     await redis.ltrim('recent_confessions', 0, 49)
 
-    await ctx.editMessageText(`**Approved:**\n\n${confessionText}`, {
-      parse_mode: 'Markdown',
+    await ctx.editMessageText(`✅ <b>Approved:</b>\n\n${confessionText}`, {
+      parse_mode: 'HTML',
     })
     await ctx.answerCallbackQuery()
   })
@@ -24,8 +24,8 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
     const fullText = ctx.callbackQuery.message?.text || ''
     const confessionText = fullText.replace(confessionPrefix, '')
 
-    await ctx.editMessageText(`**Rejected:**\n\n${confessionText}`, {
-      parse_mode: 'Markdown',
+    await ctx.editMessageText(`❌ <b>Rejected:</b>\n\n${confessionText}`, {
+      parse_mode: 'HTML',
     })
     await ctx.answerCallbackQuery()
   })
