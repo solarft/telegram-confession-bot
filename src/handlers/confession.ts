@@ -23,7 +23,7 @@ export async function submitConfession(
   const confessionText = confessionCtx.message.text
 
   try {
-    await broadcastToAdmin(confessionText)
+    await broadcastToAdmin(`🗣️ ${confessionText}`)
     await ctx.reply('Your confession has been sent for approval!', {
       reply_markup: defaultKeyboard,
     })
@@ -43,10 +43,20 @@ export async function replyConfession(
   const confessions: string[] = await redis.lrange('recent_confessions', 0, 49)
 
   confessions.forEach((confession, i) => {
-    replySelectionKeyboard.text(confession, String(i)).row()
+    replySelectionKeyboard.text(confession.slice(0, 35), String(i)).row()
   })
 
   await ctx.reply('Please select the confession you want to reply to', {
     reply_markup: replySelectionKeyboard,
   })
+
+  const callbackCtx = await conversation.waitFor('callback_query')
+  const selectedIndex = Number(callbackCtx.callbackQuery.data)
+  const selectedConfession = confessions[selectedIndex]
+
+  await ctx.reply(`Replying to: "${selectedConfession}"\n\nSend your reply:`)
+  const replyCtx = await conversation.waitFor('message:text')
+  const replyText = replyCtx.message.text
+
+  await broadcastToAdmin(`${selectedConfession}\n\n💬 ${replyText}`)
 }
