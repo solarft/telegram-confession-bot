@@ -48,12 +48,16 @@ export async function submitConfession(
   conversation: BotConversation,
   ctx: InnerContext,
 ) {
-  await ctx.reply('Please send your confession text')
-  const confessionCtx = await conversation.waitFor('message:text')
-  const confessionText = confessionCtx.message.text
+  await ctx.reply(
+    'Send your confession — a text message or a photo (with caption)',
+  )
+  const confessionCtx = await conversation.waitFor([
+    'message:text',
+    'message:photo',
+  ])
 
   try {
-    await broadcastToAdmin(`🗣️ ${confessionText}`)
+    await broadcastToAdmin(confessionCtx.message)
     await ctx.reply('Your confession has been sent for approval!', {
       reply_markup: defaultKeyboard,
     })
@@ -121,7 +125,10 @@ export async function replyConfession(
   const replyText = replyCtx.message.text
 
   try {
-    await broadcastToAdmin(`${selectedConfession}\n\n💬 ${replyText}`)
+    await broadcastToAdmin(
+      replyCtx.message,
+      `${selectedConfession}\n\n💬 ${replyText}`,
+    )
     await ctx.reply('Your reply has been sent for approval!', {
       reply_markup: defaultKeyboard,
     })
