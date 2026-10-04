@@ -9,5 +9,5 @@ export const defaultKeyboard = new Keyboard()
   .resized()
 
 export const approvalKeyboard = new InlineKeyboard()
-  .text('✅ wehh baek do', 'approve')
-  .text('❌ Amende ni siak, buang buang', 'reject')
+  .text('✅ Approve', 'approve')
+  .text('❌ Reject', 'reject')
