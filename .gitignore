@@ -11,3 +11,8 @@ dist
 # Local Netlify folder
 .netlify
 .vercel
+
+# AI agents
+.opencode
+AGENTS.md
+learning
