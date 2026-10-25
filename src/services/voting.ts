@@ -75,6 +75,11 @@ export async function castVote(
     return { status: 'already-voted', side }
   }
 
+  // SADD/SMOVE cannot carry a TTL, so the lease is applied right after the
+  // write. NX anchors it to this key's creation, so its lifetime mirrors
+  // the SET-born keys (alive, decided) instead of sliding with every vote.
+  await redis.expire(target, VOTE_TTL_SECONDS, 'NX')
+
   // Counts are always derived, so the tally can never diverge.
   const [approves, rejects] = await Promise.all([
     redis.scard(approveKey(ballotId)),
