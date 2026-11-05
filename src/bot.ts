@@ -23,4 +23,9 @@ bot.hears('🗣️ New confession', (ctx) =>
 bot.hears('💬 Reply to a confession', (ctx) =>
   ctx.conversation.enter('replyConfession'),
 )
+bot.hears('❓ How to confess/reply', (ctx) =>
+  ctx.reply(
+    'Use the reply keyboard to begin submitting confessions for approval.\nTo reply, no need to copy and paste a confession. Just click the reply button and select which confession you would like to reply to.',
+  ),
+)
 registerAdminHandlers(bot)
