@@ -6,6 +6,7 @@ export const CHANNEL_ID = process.env.CHANNEL_ID!
 export const ADMIN_GROUP_ID = process.env.ADMIN_GROUP_ID!
 export const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL!
 export const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN!
+export const HELP_PHOTO_ID = process.env.HELP_PHOTO_ID!
 
 export const APPROVAL_THRESHOLD =
   Number.parseInt(process.env.APPROVAL_THRESHOLD ?? '', 10) || 3
@@ -19,6 +20,7 @@ const required = [
   'ADMIN_GROUP_ID',
   'UPSTASH_REDIS_REST_URL',
   'UPSTASH_REDIS_REST_TOKEN',
+  //'HELP_PHOTO_ID',
 ] as const
 
 const missing = required.filter((key) => !process.env[key])

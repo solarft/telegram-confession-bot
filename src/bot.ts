@@ -31,4 +31,8 @@ bot.hears('❓ How to confess/reply', (ctx) =>
     reply_markup: defaultKeyboard,
   }),
 )
+bot.on('message:photo', (ctx) => {
+  console.log('file_id:', ctx.message.photo.at(-1)!.file_id)
+})
+
 registerAdminHandlers(bot)
