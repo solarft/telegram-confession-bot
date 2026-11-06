@@ -20,7 +20,7 @@ const required = [
   'ADMIN_GROUP_ID',
   'UPSTASH_REDIS_REST_URL',
   'UPSTASH_REDIS_REST_TOKEN',
-  //'HELP_PHOTO_ID',
+  'HELP_PHOTO_ID',
 ] as const
 
 const missing = required.filter((key) => !process.env[key])
