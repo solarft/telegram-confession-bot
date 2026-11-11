@@ -17,6 +17,14 @@ bot.use(conversations())
 bot.use(createConversation(submitConfession, 'submitConfession'))
 bot.use(createConversation(replyConfession, 'replyConfession'))
 
+// Log the real cause instead of letting errors escape as unhandled 500s —
+// which Telegram would treat as a dead webhook and re-deliver the same
+// update on top of the original failure.
+bot.catch((error) => {
+  const cause = error.error as Error
+  console.error('bot error:', cause, '\ncause:', cause?.cause)
+})
+
 bot.command('start', commands.start)
 bot.hears('🗣️ New confession', (ctx) =>
   ctx.conversation.enter('submitConfession'),

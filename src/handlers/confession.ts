@@ -61,7 +61,13 @@ export async function submitConfession(
     await ctx.reply('Your confession has been sent for approval!', {
       reply_markup: defaultKeyboard,
     })
-  } catch {
+  } catch (error) {
+    console.error(
+      'broadcastToAdmin failed:',
+      error,
+      '\ncause:',
+      (error as Error & { cause?: unknown }).cause,
+    )
     await ctx.reply('amalakkkk. sum ting went rong la. try agen leter ok', {
       reply_markup: defaultKeyboard,
     })
@@ -132,7 +138,13 @@ export async function replyConfession(
     await ctx.reply('Your reply has been sent for approval!', {
       reply_markup: defaultKeyboard,
     })
-  } catch {
+  } catch (error) {
+    console.error(
+      'broadcastToAdmin failed:',
+      error,
+      '\ncause:',
+      (error as Error & { cause?: unknown }).cause,
+    )
     await ctx.reply('amalakkkk. sum ting went rong la. try agen leter ok', {
       reply_markup: defaultKeyboard,
     })
