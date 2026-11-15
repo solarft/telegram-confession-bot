@@ -33,8 +33,12 @@ async function buildConfessionKeyboard(offset: number) {
     const lastReply = confession.includes('💬')
       ? confession.slice(confession.lastIndexOf('💬')).trim()
       : confession
+    // Cut by code points (Array.from), not UTF-16 code units: an emoji is a
+    // surrogate pair, and slicing mid-pair produces half an emoji — invalid
+    // UTF-8 that Telegram rejects ("button text must be encoded in UTF-8").
+    const chars = Array.from(lastReply)
     const label =
-      lastReply.length > 32 ? `${lastReply.slice(0, 32)}...` : lastReply
+      chars.length > 32 ? `${chars.slice(0, 32).join('')}...` : lastReply
     keyboard.text(label, String(offset + i)).row()
   })
 
