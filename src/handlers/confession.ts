@@ -1,8 +1,9 @@
 import { InlineKeyboard, type Context, type SessionFlavor } from 'grammy'
 import { redis } from '..'
 import { broadcastToAdmin } from '../services/broadcast'
-import { defaultKeyboard } from './keyboard'
+import { clearApprovalMarkup, defaultKeyboard } from './keyboard'
 import type { Conversation, ConversationFlavor } from '@grammyjs/conversations'
+import type { Message } from 'grammy/types'
 
 export type SessionData = Record<string, never>
 
@@ -44,8 +45,53 @@ async function buildConfessionKeyboard(offset: number) {
 
   if (offset > 0) keyboard.text('⬅️ Prev', 'prev')
   if (confessions.length === PAGE_SIZE) keyboard.text('➡️ Next', 'next')
+  keyboard.text('❌ Cancel', 'cancel')
 
   return { keyboard, confessions }
+}
+
+const cancelMarkup = new InlineKeyboard().text('❌ Cancel', 'cancel')
+
+/**
+ * grammY's collapsed Message type doesn't narrow through `in` checks, so
+ * these runtime predicates carry the narrowing for the conversation waits.
+ */
+function isConfessionPayload(
+  msg: unknown,
+): msg is Message.TextMessage | Message.PhotoMessage {
+  return (
+    typeof (msg as Message.TextMessage | undefined)?.text === 'string' ||
+    Array.isArray((msg as Message.PhotoMessage | undefined)?.photo)
+  )
+}
+
+function isTextMessage(msg: unknown): msg is Message.TextMessage {
+  return typeof (msg as Message.TextMessage | undefined)?.text === 'string'
+}
+
+/**
+ * Waits for the next confession payload (text or photo). Returns null when
+ * the user presses ❌ Cancel — the prompt is then edited to confirm. Any
+ * other update type (stickers, voice notes, …) is silently ignored while
+ * the flow keeps waiting.
+ */
+async function waitForConfessionOrCancel(
+  conversation: BotConversation,
+): Promise<Message.TextMessage | Message.PhotoMessage | null> {
+  while (true) {
+    const update = await conversation.wait()
+    if (update.callbackQuery?.data === 'cancel') {
+      await update.answerCallbackQuery()
+      await update.editMessageText('❌ Cancelled.', {
+        reply_markup: clearApprovalMarkup,
+      })
+      return null
+    }
+    const msg = update.message
+    if (isConfessionPayload(msg)) {
+      return msg
+    }
+  }
 }
 
 export async function submitConfession(
@@ -54,14 +100,13 @@ export async function submitConfession(
 ) {
   await ctx.reply(
     'Send your confession — a text message or a photo (with caption)',
+    { reply_markup: cancelMarkup },
   )
-  const confessionCtx = await conversation.waitFor([
-    'message:text',
-    'message:photo',
-  ])
+  const confession = await waitForConfessionOrCancel(conversation)
+  if (!confession) return
 
   try {
-    await broadcastToAdmin(confessionCtx.message)
+    await broadcastToAdmin(confession)
     await ctx.reply('Your confession has been sent for approval!', {
       reply_markup: defaultKeyboard,
     })
@@ -104,6 +149,12 @@ export async function replyConfession(
     const data = callbackCtx.callbackQuery.data
     await callbackCtx.answerCallbackQuery()
 
+    if (data === 'cancel') {
+      await callbackCtx.editMessageText('❌ Cancelled.', {
+        reply_markup: clearApprovalMarkup,
+      })
+      return
+    }
     if (data === 'prev') {
       offset = Math.max(0, offset - PAGE_SIZE)
     } else if (data === 'next') {
@@ -129,15 +180,28 @@ export async function replyConfession(
 
   await ctx.reply(
     `<b>Replying to:</b>\n\n${selectedConfession}\n\nSend your reply:`,
-    { parse_mode: 'HTML' },
+    { parse_mode: 'HTML', reply_markup: cancelMarkup },
   )
-  const replyCtx = await conversation.waitFor('message:text')
-  const replyText = replyCtx.message.text
+
+  let reply: { msg: Message.TextMessage; text: string } | undefined
+  while (!reply) {
+    const update = await conversation.wait()
+    if (update.callbackQuery?.data === 'cancel') {
+      await update.answerCallbackQuery()
+      await update.editMessageText('❌ Cancelled.', {
+        reply_markup: clearApprovalMarkup,
+      })
+      return
+    }
+    if (isTextMessage(update.message)) {
+      reply = { msg: update.message, text: update.message.text }
+    }
+  }
 
   try {
     await broadcastToAdmin(
-      replyCtx.message,
-      `${selectedConfession}\n\n💬 ${replyText}`,
+      reply.msg,
+      `${selectedConfession}\n\n💬 ${reply.text}`,
     )
     await ctx.reply('Your reply has been sent for approval!', {
       reply_markup: defaultKeyboard,

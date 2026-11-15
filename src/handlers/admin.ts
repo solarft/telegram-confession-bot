@@ -41,9 +41,30 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
     const result = await castVote(msg.message_id, ctx.from.id, side)
 
     switch (result.status) {
-      case 'expired':
+      case 'expired': {
         await ctx.answerCallbackQuery({ text: 'This ballot has expired.' })
+        // Cleanup on touch: the click that finds the dead ballot marks the
+        // message closed and strips the buttons. Best-effort — a duplicate
+        // delivery racing the same edit gets "message is not modified".
+        try {
+          const { text: confessionText, fileId } = confessionOf(msg)
+          if (fileId) {
+            await ctx.editMessageCaption({
+              caption: `⏳ <b>Voting expired:</b>\n\n${confessionText}`,
+              parse_mode: 'HTML',
+              reply_markup: clearApprovalMarkup,
+            })
+          } else {
+            await ctx.editMessageText(
+              `⏳ <b>Voting expired:</b>\n\n${confessionText}`,
+              { parse_mode: 'HTML', reply_markup: clearApprovalMarkup },
+            )
+          }
+        } catch (error) {
+          console.error('expired-ballot cleanup edit failed:', error)
+        }
         return
+      }
       case 'already-voted':
         await ctx.answerCallbackQuery({
           text: `You already voted ${sideLabel(result.side)}.`,
