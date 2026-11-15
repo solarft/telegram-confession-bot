@@ -54,7 +54,7 @@ const cancelMarkup = new InlineKeyboard().text('❌ Cancel', 'cancel')
 
 /**
  * grammY's collapsed Message type doesn't narrow through `in` checks, so
- * these runtime predicates carry the narrowing for the conversation waits.
+ * this runtime predicate carries the narrowing for the conversation waits.
  */
 function isConfessionPayload(
   msg: unknown,
@@ -63,10 +63,6 @@ function isConfessionPayload(
     typeof (msg as Message.TextMessage | undefined)?.text === 'string' ||
     Array.isArray((msg as Message.PhotoMessage | undefined)?.photo)
   )
-}
-
-function isTextMessage(msg: unknown): msg is Message.TextMessage {
-  return typeof (msg as Message.TextMessage | undefined)?.text === 'string'
 }
 
 /**
@@ -179,30 +175,21 @@ export async function replyConfession(
   }
 
   await ctx.reply(
-    `<b>Replying to:</b>\n\n${selectedConfession}\n\nSend your reply:`,
+    `<b>Replying to:</b>\n\n${selectedConfession}\n\nSend your reply — a text message or a photo (with caption):`,
     { parse_mode: 'HTML', reply_markup: cancelMarkup },
   )
 
-  let reply: { msg: Message.TextMessage; text: string } | undefined
-  while (!reply) {
-    const update = await conversation.wait()
-    if (update.callbackQuery?.data === 'cancel') {
-      await update.answerCallbackQuery()
-      await update.editMessageText('❌ Cancelled.', {
-        reply_markup: clearApprovalMarkup,
-      })
-      return
-    }
-    if (isTextMessage(update.message)) {
-      reply = { msg: update.message, text: update.message.text }
-    }
-  }
+  const replyMsg = await waitForConfessionOrCancel(conversation)
+  if (!replyMsg) return
+  // A caption-less photo reply still needs something in the quoted text,
+  // otherwise the stored confession ends with a dangling "💬 ".
+  const replyText =
+    'photo' in replyMsg
+      ? (replyMsg.caption ?? '').trim() || '(User sent a photo)'
+      : replyMsg.text
 
   try {
-    await broadcastToAdmin(
-      reply.msg,
-      `${selectedConfession}\n\n💬 ${reply.text}`,
-    )
+    await broadcastToAdmin(replyMsg, `${selectedConfession}\n\n💬 ${replyText}`)
     await ctx.reply('Your reply has been sent for approval!', {
       reply_markup: defaultKeyboard,
     })
