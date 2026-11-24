@@ -17,11 +17,16 @@ export type BotConversation = Conversation<BotContext, InnerContext>
 
 const PAGE_SIZE = 10
 
-async function buildConfessionKeyboard(offset: number) {
-  const confessions: string[] = await redis.lrange(
-    'recent_confessions',
-    offset,
-    offset + PAGE_SIZE - 1,
+async function buildConfessionKeyboard(
+  conversation: BotConversation,
+  offset: number,
+) {
+  // `external` runs this read once and persists the snapshot in the
+  // conversation state. Replays then reuse the stored snapshot, so the
+  // positional index in the callback data keeps resolving to the confession
+  // the user actually saw even if recent_confessions gained entries meanwhile.
+  const confessions = await conversation.external(() =>
+    redis.lrange('recent_confessions', offset, offset + PAGE_SIZE - 1),
   )
 
   if (confessions.length === 0 && offset === 0) {
@@ -125,7 +130,10 @@ export async function replyConfession(
 ) {
   let offset = 0
 
-  const { keyboard, confessions } = await buildConfessionKeyboard(offset)
+  const { keyboard, confessions } = await buildConfessionKeyboard(
+    conversation,
+    offset,
+  )
   if (!keyboard) {
     await ctx.reply('No confessions available yet.', {
       reply_markup: defaultKeyboard,
@@ -160,7 +168,7 @@ export async function replyConfession(
       continue
     }
 
-    const result = await buildConfessionKeyboard(offset)
+    const result = await buildConfessionKeyboard(conversation, offset)
     if (!result.keyboard) break
 
     currentConfessions = result.confessions
